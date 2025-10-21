@@ -1,51 +1,48 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import funcao
 
-#Roda fastapi = python -m uvicorn api:app --reload
+app = FastAPI(title="API Controle de Produtos e Estoque")
 
-#Testar as rotas no fastapi
-# /docs > documentação Swagger
-# /redoc > Documentação Redoc
+# -------------------- Adicionar Produto --------------------
+@app.post("/produtos")
+def criar_produto(nome: str, categoria: str = "", preco: float = 0, quantidade: int = 0):
+    resultado = funcao.adicionar_produto(nome, categoria, preco, quantidade)
+    if "erro" in resultado:
+        raise HTTPException(status_code=500, detail=resultado["erro"])
+    return resultado
 
-app = FastAPI(title="Gerenciador de Produtos e Estoque")
-
-#GET > Pegar/Listar
-#POST > Enviar/Cadastrar
-#PUT > Aualizar
-#DELETE > Deletar
-
-#API sempre retorna dados em JSON (Chave: Valor)
-
-@app.get("/")
-def home():
-    return {"Mensagem": "Bem-vindo ao gerenciador de Produtos e Estoque"}
-
-
-@app.get("/produto")
-def catalogo():
+# -------------------- Listar Produtos --------------------
+@app.get("/produtos")
+def listar_produtos():
     produtos = funcao.listar_produtos()
-    lista = []
-    for produto in produtos:
-        lista.append({
-            "id": produto[0],
-            "nome": produto[1],
-            "categoria": produto[2],
-            "preço": produto[3]
-        })
-    return {"produtos": lista}
+    return {"produtos": produtos}
 
+# -------------------- Atualizar Produto --------------------
+@app.put("/produtos/{id}")
+def atualizar_produto(
+    id: int,
+    nome: str = None,
+    categoria: str = None,
+    preco: float = None,
+    quantidade: int = None
+):
+    resultado = funcao.atualizar_produto(id, nome, categoria, preco, quantidade)
+    if "erro" in resultado:
+        raise HTTPException(status_code=500, detail=resultado["erro"])
+    return resultado
 
-@app.post("/produto")
-def adicionar_produto(id: str, nome: str, categoria: int, preco: float):
-    funcao.criar_produto(id, nome, categoria, preco)
-    return {"mensagem": "Produto adicionado com sucesso"}
+# -------------------- Excluir Produto --------------------
+@app.delete("/produtos/{id}")
+def excluir_produto(id: int):
+    resultado = funcao.excluir_produto(id)
+    if "erro" in resultado:
+        raise HTTPException(status_code=500, detail=resultado["erro"])
+    return resultado
 
-
-@app.put("/produto/{id_produto}")
-def atualizar_produto(id_produto: int, novo_preco: float):
-    produto = funcao.buscar_produto(id_produto)
-    if produto:
-        funcao.atualizar_produto(id_produto, novo_preco)
-        return {"mensagem": "Produto atualizado com sucesso!"}
-    else:
-        return {"erro": "Produto não encontrado"}
+# -------------------- Valor Total do Estoque --------------------
+@app.get("/produtos/valor_total")
+def valor_total_estoque():
+    resultado = funcao.valor_total_estoque()
+    if "erro" in resultado:
+        raise HTTPException(status_code=500, detail=resultado["erro"])
+    return resultado
