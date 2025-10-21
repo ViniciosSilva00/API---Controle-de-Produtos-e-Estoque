@@ -5,49 +5,35 @@ def adicionar_produto(nome, categoria, preco, quantidade):
     if not conn:
         return {"erro": "Não foi possível conectar ao banco de dados"}
 
-    try:
-        cursor = conn.cursor()
-        sql = "INSERT INTO produto (nome, categoria, preco, quantidade) VALUES (%s, %s, %s, %s)"
-        cursor.execute(sql, (nome, categoria, preco, quantidade))
-        conn.commit()
-        return {"mensagem": "Produto adicionado com sucesso"}
-    except Exception as e:
-        return {"erro": str(e)}
-    finally:
-        cursor.close()
-        conn.close()
+    cursor = conn.cursor()
+    sql = "INSERT INTO produtos (nome, categoria, preco, quantidade) VALUES (%s, %s, %s, %s)"
+    cursor.execute(sql, (nome, categoria, preco, quantidade))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"mensagem": "Produto adicionado com sucesso"}
+
 
 def listar_produtos():
     conn = conectar()
-    if not conn:
-        return []
-
-    try:
+    if conn:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM produto")
+        cursor.execute("SELECT * FROM produtos")
         resultado = cursor.fetchall()
-        return resultado
-    except Exception as e:
-        print(f"Erro ao listar produtos: {e}")
-        return []
-    finally:
         cursor.close()
         conn.close()
+        return resultado
 
 def atualizar_produto(id, nome=None, categoria=None, preco=None, quantidade=None):
     conn = conectar()
-    if not conn:
-        return {"erro": "Não foi possível conectar ao banco de dados"}
-
-    try:
+    if conn:
         cursor = conn.cursor()
         campos = []
         valores = []
-
-        if nome is not None:
+        if nome: 
             campos.append("nome=%s")
             valores.append(nome)
-        if categoria is not None:
+        if categoria:
             campos.append("categoria=%s")
             valores.append(categoria)
         if preco is not None:
@@ -56,49 +42,31 @@ def atualizar_produto(id, nome=None, categoria=None, preco=None, quantidade=None
         if quantidade is not None:
             campos.append("quantidade=%s")
             valores.append(quantidade)
-
-        if not campos:
-            return {"erro": "Nenhum campo para atualizar"}
-
         valores.append(id)
-        sql = f"UPDATE produto SET {', '.join(campos)} WHERE id=%s"
+        sql = f"UPDATE produtos SET {', '.join(campos)} WHERE id=%s"
         cursor.execute(sql, tuple(valores))
         conn.commit()
-        return {"mensagem": "Produto atualizado com sucesso"}
-    except Exception as e:
-        return {"erro": str(e)}
-    finally:
         cursor.close()
         conn.close()
+        return {"mensagem": "Produto atualizado com sucesso"}
 
 def excluir_produto(id):
     conn = conectar()
-    if not conn:
-        return {"erro": "Não foi possível conectar ao banco de dados"}
-
-    try:
+    if conn:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM produto WHERE id=%s", (id,))
+        cursor.execute("DELETE FROM produtos WHERE id=%s", (id,))
         conn.commit()
-        return {"mensagem": "Produto excluído com sucesso"}
-    except Exception as e:
-        return {"erro": str(e)}
-    finally:
         cursor.close()
         conn.close()
+        return {"mensagem": "Produto excluído com sucesso"}
 
 def valor_total_estoque():
     conn = conectar()
-    if not conn:
-        return {"valor_total": 0}
-
-    try:
+    if conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT SUM(preco * quantidade) FROM produto")
+        cursor.execute("SELECT SUM(preco * quantidade) FROM produtos")
         total = cursor.fetchone()[0]
-        return {"valor_total": total if total else 0}
-    except Exception as e:
-        return {"erro": str(e)}
-    finally:
         cursor.close()
         conn.close()
+        return {"valor_total": total if total else 0}
+
